@@ -1,0 +1,2 @@
+# ignore .env file from being pushed to repo
+.env
