@@ -1,0 +1,5 @@
+version: 2
+
+models:
+  - name: silver_daily_weather
+  - name: silver_daily_sales

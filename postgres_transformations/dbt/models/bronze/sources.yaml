@@ -1,0 +1,36 @@
+version: 2
+
+sources:
+  - name: postgres_db
+    database: postgres_db
+    schema: bronze
+    tables:
+      - name: raw_daily_weather
+        description: "Raw daily weather data loaded into the bronze layer"
+        columns:
+          - name: weather_code
+          - name: temperature_2m_mean
+          - name: temperature_2m_max
+          - name: apparent_temperature_mean
+          - name: rain_sum
+          - name: precipitation_sum
+          - name: precipitation_hours
+          - name: date
+          - name: wind_speed_10m_max
+          - name: wind_gusts_10m_max
+          - name: city
+      - name: raw_daily_sales
+        description: "Raw daily sales clothes data loaded into the bronze layer"
+        columns:
+          - name: date
+          - name: first_name
+          - name: last_name
+          - name: email
+          - name: category
+          - name: price
+          - name: product_name
+          - name: creditcard_num
+          - name: creditcard_type
+          - name: currency
+          - name: address
+          - name: address_line_2

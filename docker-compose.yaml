@@ -1,8 +1,8 @@
 services:
   postgres_db:
     networks: 
-      - weather_elt_network
-    image: postgres:18
+      - elt_network
+    image: postgres:16
     environment:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
@@ -16,17 +16,35 @@ services:
       start_period: 30s
       timeout: 10s
 
-  weather_ingestion:
+  ingestion:
     networks: 
-      - weather_elt_network
-    build: ./weather-ingestion
+      - elt_network
+    build: ./ingestion
     depends_on:
-      postgres_db:
+      postgres_db:  
         condition: service_healthy
         restart: true
     env_file:
       - .env
+    volumes:
+      - ./sales_data:/app/sales_data
+
+  dbt:
+    image: ghcr.io/dbt-labs/dbt-postgres:1.7.4
+    networks: 
+      - elt_network
+    volumes:
+      - ./postgres_transformations/dbt:/usr/app/dbt
+      - ~/.dbt:/root/.dbt
+    environment:
+      DBT_PROFILE: default
+      DBT_TARGET: dev
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      ingestion:
+        condition: service_completed_successfully
 
 networks:
-  weather_elt_network:
+  elt_network:
     driver: bridge
