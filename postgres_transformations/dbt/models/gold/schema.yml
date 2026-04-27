@@ -1,0 +1,72 @@
+version: 2
+
+models:
+  - name: fact_daily_sales
+    description: "Aggregated sales data"
+    columns:
+      - name: sale_sk
+      - name: date_fk
+      - name: customer_fk
+      - name: location_fk
+      - name: weather_fk
+      - name: product_fk
+      - name: average_order_value
+      - name: max_order_value
+      - name: min_order_value
+      - name: total_revenue
+      - name: total_number_of_sales
+  - name: dim_customer
+    description: "Customer dimension table"
+    columns:
+      - name: customer_id
+      - name: first_name
+      - name: last_name
+      - name: card_last_four
+      - name: card_type
+      - name: first_seen_date
+  - name: dim_daily_weather
+    description: "Weather dimension table"
+    columns:
+      - name: weather_sk
+      - name: date_fk
+      - name: location_fk
+      - name: weather_code
+      - name: temp_mean_c
+      - name: temp_max_c
+      - name: apparent_temp_mean_c
+      - name: rain_sum_mm
+      - name: precipitation_sum_mm
+      - name: precipitation_hours
+      - name: wind_speed_max_kms
+      - name: wind_gusts_max_kmh
+  - name: dim_date
+    description: "Date dimension table"
+    columns:
+      - name: date_day
+      - name: date_sk
+      - name: day_of_week_num
+      - name: day_of_week_name
+      - name: day_of_month
+      - name: week_of_year
+      - name: month_num
+      - name: month_name
+      - name: quarter
+      - name: year
+      - name: is_weekend
+      - name: season
+  - name: dim_product
+    description: "Product dimension table"
+    columns:
+      - name: product_sk
+      - name: product_name
+      - name: category
+      - name: price_band
+      - name: avg_historical_price
+      - name: min_historical_price
+      - name: max_historical_price
+  - name: dim_location
+    description: "Location dimension table"
+    columns:
+      - name: location_sk
+      - name: city
+      - name: state

@@ -2,7 +2,7 @@ version: 2
 
 sources:
   - name: postgres_db
-    database: postgres_db
+    database: weather_db
     schema: bronze
     tables:
       - name: raw_daily_weather
@@ -34,3 +34,4 @@ sources:
           - name: currency
           - name: address
           - name: address_line_2
+          - name: postcode

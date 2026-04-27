@@ -1,1 +1,0 @@
-SELECT * FROM {{ source('postgres_db', 'raw_daily_sales') }}

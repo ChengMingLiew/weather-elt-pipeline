@@ -1,5 +1,91 @@
 version: 2
 
 models:
-  - name: silver_daily_weather
-  - name: silver_daily_sales
+  - name: staging_daily_weather
+    description: "Cleaned and typed weather data"
+    columns:
+      - name: weather_date
+        tests:
+          - not_null
+      - name: city
+        tests:
+          - not_null
+      - name: weather_code
+        tests:
+          - not_null
+      - name: temperature_mean_c
+        tests:
+          - not_null
+      - name: temperature_max_c
+        tests:
+          - not_null
+      - name: apparent_temp_mean_c
+        tests:
+          - not_null
+      - name: rain_sum_mm
+        tests:
+          - not_null
+      - name: precipitation_sum_mm
+        tests:
+          - not_null
+      - name: precipitation_hours
+        tests:
+          - not_null
+      - name: wind_speed_max_kmh
+        tests:
+          - not_null
+      - name: wind_gusts_max_kmh
+        tests:
+          - not_null
+  - name: staging_customer
+    description: "Cleaned and typed customer data"
+    columns:
+      - name: sale_date
+        tests:
+          - not_null
+      - name: customer_id
+        tests:
+          - not_null
+          - unique
+      - name: first_name
+        tests:
+          - not_null
+      - name: last_name
+        tests:
+          - not_null
+      - name: card_last_four
+        tests:
+          - not_null
+      - name: card_type
+        tests:
+          - not_null
+  - name: staging_daily_sales
+    columns:
+      - name: sale_date
+        tests:
+          - not_null
+      - name: customer_id
+        tests:
+          - not_null
+      - name: category
+        tests:
+          - not_null
+      - name: product_name
+        tests:
+          - not_null
+      - name: price
+        tests:
+          - not_null
+      - name: currency
+        tests:
+          - not_null
+      - name: address
+        tests:
+          - not_null
+      - name: address_line_2
+        tests:
+          - not_null
+      - name: postcode
+        tests:
+          - not_null
+      - name: city

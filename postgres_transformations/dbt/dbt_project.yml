@@ -22,7 +22,7 @@ clean-targets: # directories to be removed by `dbt clean`
   - "dbt_packages"
 
 # Configuring models
-# Full documentation: https://docs.getdbt.com/docs/configuring-models
+# Full documentation:
 
 # In this example config, we tell dbt to build all models in the example/
 # directory as views. These settings can be overridden in the individual model

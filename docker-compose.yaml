@@ -35,10 +35,13 @@ services:
       - elt_network
     volumes:
       - ./postgres_transformations/dbt:/usr/app/dbt
-      - ~/.dbt:/root/.dbt
     environment:
-      DBT_PROFILE: default
+      DBT_PROFILE: dbt_weather
       DBT_TARGET: dev
+    entrypoint: ["sh", "-c"]
+    command: >
+      "dbt deps --project-dir /usr/app/dbt --profiles-dir /usr/app/dbt &&
+       dbt run --project-dir /usr/app/dbt --profiles-dir /usr/app/dbt"
     depends_on:
       postgres_db:
         condition: service_healthy
