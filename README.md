@@ -8,5 +8,6 @@ This project is done using OpenMeteo weather API, and a synthesized data for a f
 - Airflow Orchestration
 
 ## Repository Structure
-1.docker-compose.yml.: This file contains the configuration for Docker Compose which is used to orchestrate multiple containers. It defines a few services listed down below:
-   - 
+
+1. docker-compose.yml.: This file contains the configuration for Docker Compose which is used to orchestrate multiple containers. It defines a few services listed down below:
+- - thish
