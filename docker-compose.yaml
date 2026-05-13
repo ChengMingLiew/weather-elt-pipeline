@@ -4,9 +4,9 @@ services:
       - elt_network
     image: postgres:16
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
       POSTGRES_DB: weather_db
+      POSTGRES_USER: $POSTGRES_USER
+      POSTGRES_PASSWORD: $POSTGRES_PASSWORD
     volumes:
       - ./source_db_init/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
@@ -16,45 +16,45 @@ services:
       start_period: 30s
       timeout: 10s
 
-  ingestion:
-    networks: 
-      - elt_network
-    build: ./ingestion
-    depends_on:
-      postgres_db:  
-        condition: service_healthy
-        restart: true
-    env_file:
-      - .env
-    volumes:
-      - ./sales_data:/app/sales_data
+  # ingestion:
+  #   networks: 
+  #     - elt_network
+  #   build: ./ingestion
+  #   depends_on:
+  #     postgres_db:  
+  #       condition: service_healthy
+  #       restart: true
+  #   env_file:
+  #     - .env
+  #   volumes:
+  #     - ./sales_data:/app/sales_data
 
-  dbt:
-    image: ghcr.io/dbt-labs/dbt-postgres:1.7.4
-    networks: 
-      - elt_network
-    volumes:
-      - ./postgres_transformations/dbt:/usr/app/dbt
-    environment:
-      DBT_PROFILE: dbt_weather
-      DBT_TARGET: dev
-    entrypoint: ["sh", "-c"]
-    command: >
-      "dbt deps --project-dir /usr/app/dbt --profiles-dir /usr/app/dbt &&
-       dbt run --project-dir /usr/app/dbt --profiles-dir /usr/app/dbt"
-    depends_on:
-      postgres_db:
-        condition: service_healthy
-      ingestion:
-        condition: service_completed_successfully
+  # dbt:
+  #   image: ghcr.io/dbt-labs/dbt-postgres:1.7.4
+  #   networks: 
+  #     - elt_network
+  #   volumes:
+  #     - ./postgres_transformations/dbt:/usr/app/dbt
+  #   environment:
+  #     DBT_PROFILE: dbt_weather
+  #     DBT_TARGET: dev
+  #   entrypoint: ["sh", "-c"]
+  #   command: >
+  #     "dbt deps --project-dir /usr/app/dbt --profiles-dir /usr/app/dbt &&
+  #      dbt run --project-dir /usr/app/dbt --profiles-dir /usr/app/dbt"
+  #   depends_on:
+  #     postgres_db:
+  #       condition: service_healthy
+  #     ingestion:
+  #       condition: service_completed_successfully
 
   airflow_db:
     networks:
       - elt_network 
     image: postgres:16
     environment:
-      POSTGRES_USER: airflow
-      POSTGRES_PASSWORD: airflow
+      POSTGRES_USER: $AIRFLOW_USER
+      POSTGRES_PASSWORD: $AIRFLOW_PASSWORD
       POSTGRES_DB: airflow
     volumes:
       - airflow_db_data:/var/lib/postgresql/data 
@@ -66,16 +66,15 @@ services:
       timeout: 10s
 
   init-airflow:
-    image: apache/airflow:latest
+    image: apache/airflow:3.2.1
     depends_on:
       airflow_db:
         condition: service_healthy
     networks:
       - elt_network
     environment:
-      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@airflow_db:5432/airflow
-      - AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_USERS=airflow:admin
-      - AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_PASSWORD=password
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=$AIRFLOW_POSTGRES_CONNECTION_STRING
+      - AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_PASSWORDS=$AIRFLOW_USER:$AIRFLOW_PASSWORD
     command: >
       bash -c "airflow db migrate"
 
@@ -106,23 +105,18 @@ services:
       - ~/.dbt:/root/.dbt
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
-      - LOAD_EX=n
-      - EXECUTOR=Local
       - AIRFLOW__CORE__INTERNAL_API_URL=http://webserver:8080
-      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@airflow_db:5432/airflow
-      - AIRFLOW_CONN_DESTINATION_POSTGRES=postgres://user:password@postgres_db:5432/weather_db
-      - AIRFLOW__CORE__FERNET_KEY=plIipb9RU3-3wJ1UNaAtqVNJrqFEks1-dGbJM34EW7U=
-      - AIRFLOW_WWW_USER_USERNAME=airflow
-      - AIRFLOW_WWW_USER_PASSWORD=password
-      - AIRFLOW__API__SECRET_KEY=18feafbe43dc8cc68f02c4f4b2f447d71af49ddace7e52da0104c1aa1acb83f962ce65f2d56b82f7527c70c71334252a5ca9957a3f96b2d40c59d3a2352e5107
-      - AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_USERS=airflow:admin
-      - AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_PASSWORDS=airflow:password
-      - AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK=true
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=$AIRFLOW_POSTGRES_CONNECTION_STRING
+      - AIRFLOW_CONN_DESTINATION_POSTGRES=postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@postgres_db:5432/weather_db
+      - AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_PASSWORDS=$AIRFLOW_USER:$AIRFLOW_PASSWORD
       - AIRFLOW__LOGGING__LOGGING_LEVEL=INFO
       - AIRFLOW__CORE__DAGS_FOLDER=/opt/airflow/dags
+      - AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK=true
       - AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION=False
-      - AIRFLOW__API_AUTH__JWT_SECRET=18feafbe43dc8cc68f02c4f4b2f447d71af49ddace7e52da0104c1aa1acb83f962ce65f2d56b82f7527c70c71334252a5ca9957a3f96b2d40c59d3a2352e5107
-      - PROJECT_ROOT=/c/Users/Liew ChengMing/weather-elt-pipeline
+      - PROJECT_ROOT=$PROJECT_ROOT
+      - AIRFLOW__API__SECRET_KEY=$SECRET_KEY
+      - AIRFLOW__API_AUTH__JWT_SECRET=$JWT_SECRET
+      - AIRFLOW__CORE__FERNET_KEY=$FERNET_KEY
     ports:
       - "8080:8080"
     command: api-server
@@ -152,27 +146,21 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./sales_data:/opt/airflow/sales_data
     environment:
-      - LOAD_EX=n
-      - EXECUTOR=Local
       - AIRFLOW__CORE__INTERNAL_API_URL=http://webserver:8080
-      - AIRFLOW_ENABLE_AIP_44=True
-      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@airflow_db:5432/airflow
-      - AIRFLOW_CONN_DESTINATION_POSTGRES=postgres://user:password@postgres_db:5432/weather_db
-      - AIRFLOW__CORE__FERNET_KEY=plIipb9RU3-3wJ1UNaAtqVNJrqFEks1-dGbJM34EW7U=
-      - AIRFLOW__API__SECRET_KEY=18feafbe43dc8cc68f02c4f4b2f447d71af49ddace7e52da0104c1aa1acb83f962ce65f2d56b82f7527c70c71334252a5ca9957a3f96b2d40c59d3a2352e5107
-      - AIRFLOW_WWW_USER_USERNAME=airflow
-      - AIRFLOW_WWW_USER_PASSWORD=password
-      - AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_USERS=airflow:admin
-      - AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_PASSWORDS=airflow:password
-      - AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK=true
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=$AIRFLOW_POSTGRES_CONNECTION_STRING
+      - AIRFLOW_CONN_DESTINATION_POSTGRES=postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@postgres_db:5432/weather_db
+      - AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_PASSWORDS=$AIRFLOW_USER:$AIRFLOW_PASSWORD
       - AIRFLOW__LOGGING__LOGGING_LEVEL=INFO
       - AIRFLOW__CORE__DAGS_FOLDER=/opt/airflow/dags
-      - AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION=False
       - AIRFLOW__CORE__EXECUTION_API_SERVER_URL=http://webserver:8080/execution/
       - AIRFLOW__LOGGING__LOGGING_SERVER_HOST=elt-scheduler-1
       - AIRFLOW__LOGGING__LOGGING_SERVER_PORT=8793
-      - AIRFLOW__API_AUTH__JWT_SECRET=18feafbe43dc8cc68f02c4f4b2f447d71af49ddace7e52da0104c1aa1acb83f962ce65f2d56b82f7527c70c71334252a5ca9957a3f96b2d40c59d3a2352e5107
-      - PROJECT_ROOT=/c/Users/Liew ChengMing/weather-elt-pipeline
+      - AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK=true
+      - AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION=False
+      - PROJECT_ROOT=$PROJECT_ROOT
+      - AIRFLOW__API__SECRET_KEY=$SECRET_KEY
+      - AIRFLOW__API_AUTH__JWT_SECRET=$JWT_SECRET
+      - AIRFLOW__CORE__FERNET_KEY=$FERNET_KEY
     command: scheduler
 
   dag-processor:
@@ -197,14 +185,14 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./sales_data:/opt/airflow/sales_data
     environment:
-      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@airflow_db:5432/airflow
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=$AIRFLOW_POSTGRES_CONNECTION_STRING
       - AIRFLOW__CORE__DAGS_FOLDER=/opt/airflow/dags
       - AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION=False
-      - AIRFLOW__CORE__FERNET_KEY=plIipb9RU3-3wJ1UNaAtqVNJrqFEks1-dGbJM34EW7U=
-      - AIRFLOW__API__SECRET_KEY=18feafbe43dc8cc68f02c4f4b2f447d71af49ddace7e52da0104c1aa1acb83f962ce65f2d56b82f7527c70c71334252a5ca9957a3f96b2d40c59d3a2352e5107
       - AIRFLOW__CORE__EXECUTION_API_SERVER_URL=http://webserver:8080/execution/
-      - AIRFLOW__API_AUTH__JWT_SECRET=18feafbe43dc8cc68f02c4f4b2f447d71af49ddace7e52da0104c1aa1acb83f962ce65f2d56b82f7527c70c71334252a5ca9957a3f96b2d40c59d3a2352e5107
-      - PROJECT_ROOT=/c/Users/Liew ChengMing/weather-elt-pipeline
+      - PROJECT_ROOT=$PROJECT_ROOT
+      - AIRFLOW__API__SECRET_KEY=$SECRET_KEY
+      - AIRFLOW__API_AUTH__JWT_SECRET=$JWT_SECRET
+      - AIRFLOW__CORE__FERNET_KEY=$FERNET_KEY
     command: dag-processor
 
 volumes:
