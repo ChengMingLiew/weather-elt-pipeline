@@ -16,15 +16,18 @@ This project is done using OpenMeteo weather API, and a synthesized data for a f
    - webserver: Hosts the Airflow UI and internal API.
    - scheduler: Core orchestration engine that watches for DAGS to run, queue tasks and track success or failure.
    - dag-processor: Parses DAG definitions and registers them in Airflow.
+   - superset: Dashboard for visualisation of the data that is in postgres_db
 2. source_db_init/init.sql: This initialises the SQL tables in our Postgres.
 3. postgres_transformation: This is where all our dbt transformations happen between the layers of our architecture.
 4. ingestion: Holds all of our python scripts that will load the sales and weather data into our Postgres
 5. airflow/dags/elt_dag.py: Defines the DAG of our project so that it can run ingestion and our transformations.
+6. superset/superset_config.py: This connects postgres_db to superset with python scripts and holds the someconfiguration for superset.
 
 ## Getting Started
 1. Ensure that you have Docker installed in your local machine.
 2. Clone this repository and navigate to the project directory.
 3. Run `docker compose up --build`.
 4. After all the services have been completed, you can:
-   - Run `docker exec -it weather-elt-pipeline-postgres_db-1 psql -U user -d weather_db` to run sql queries and inspect the sql tables
-   - Go to localhost:8080 and run the DAGs manually, and see the execution of it.   
+   - Run `docker exec -it weather-elt-pipeline-postgres_db-1 psql -U user -d weather_db` to run sql queries and inspect the SQL tables.
+   - Go to localhost:8080 and run the DAGs manually, and see the execution of it.
+   - Go to localhost:8088 and run superset. This allows for SQL queries and visualisation of the data that is being loaded into PostgreSQL.
