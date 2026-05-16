@@ -195,8 +195,55 @@ services:
       - AIRFLOW__CORE__FERNET_KEY=$FERNET_KEY
     command: dag-processor
 
+  superset_db:
+    networks:
+      - elt_network
+    image: postgres:16
+    environment:
+      POSTGRES_USER: superset
+      POSTGRES_PASSWORD: superset
+      POSTGRES_DB: superset
+    volumes:
+      - superset_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U superset -d superset']
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+
+  superset:
+    build: 
+      context: .
+      dockerfile: Dockerfile.superset
+    networks:
+      - elt_network
+    depends_on:
+      superset_db:
+        condition: service_healthy
+      postgres_db:        
+        condition: service_healthy
+    ports:
+      - "8088:8088"
+    environment:
+      - SUPERSET_SECRET_KEY=$SUPERSET_SECRET_KEY
+      - SQLALCHEMY_DATABASE_URI=postgresql+psycopg2://superset:superset@superset_db:5432/superset
+      - SUPERSET_CONFIG_PATH=/app/pythonpath/superset_config.py
+    volumes:
+      - superset_home:/app/superset_home
+      - ./superset/superset_config.py:/app/pythonpath/superset_config.py
+    command: >
+      bash -c "
+        superset db upgrade && 
+        superset fab create-admin --username admin --firstname Admin --lastname User --email admin@example.com --password admin && 
+        superset init &&
+        superset run -p 8088 -h 0.0.0.0 --with-threads --reload --debugger
+      "
+
 volumes:
   airflow_db_data:
+  superset_db_data:
+  superset_home:
 
 networks:
   elt_network:

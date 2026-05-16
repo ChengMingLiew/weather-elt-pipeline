@@ -58,7 +58,7 @@ params = {
 		147.3272, 147.1441,
 	],
     "start_date": "2025-01-01",
-    "end_date":   "2025-01-07",
+    "end_date":   "2025-12-31",
     "daily": [
         "weather_code",
         "temperature_2m_mean",
