@@ -29,5 +29,5 @@ This project is done using OpenMeteo weather API, and a synthesized data for a f
 3. Run `docker compose up --build`.
 4. After all the services have been completed, you can:
    - Run `docker exec -it weather-elt-pipeline-postgres_db-1 psql -U user -d weather_db` to run sql queries and inspect the SQL tables.
-   - Go to localhost:8080 and run the DAGs manually, and see the execution of it.
+   - Go to localhost:8080 and run the DAGs manually, and see the execution of it. (Please check the webserver logs for the admin user password)
    - Go to localhost:8088 for the superset UI. This allows for SQL queries and visualisation of the data that is being loaded into PostgreSQL.
