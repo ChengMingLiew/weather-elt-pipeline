@@ -3,6 +3,7 @@
 This project is done using OpenMeteo weather API, and a synthesized data for a fictitious clothing company. End goal of this project is to do analysis on how the weather would affect the sales of the clothing company, and this is a pipeline to ingest the sales data and weather data that are available to us day by day. The medallion architecture is used as it is simple to differentiate the different layers of the data that we have, and do any inspections of those layers if need be.
 
 ### Tools that are used:
+- Docker
 - dbt core
 - PostgreSQL
 - Apache Airflow
